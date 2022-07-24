@@ -17,3 +17,7 @@ Further instructions and examples can be found there.
 1. Install Python 3 (tested on 3.10)
 2. `pip install -r requirements.txt`
 3. Edit & run `mod_updater.py` at your leisure
+
+## Notes
+
+Executable was created using [auto-py-to-exe](https://pypi.org/project/auto-py-to-exe/).

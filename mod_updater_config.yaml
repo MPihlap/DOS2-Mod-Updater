@@ -15,7 +15,7 @@ Global:
 
 # Epic Encounters
 EpicEncounters:
-    force_update: False
+    force_update: True
     url: https://drive.google.com/file/d/1loqIeAQsvNGlB2SD4b9QQC2fyb0B_qe9/view?usp=sharing
     filenames:
         - "Epic_Encounters_Core_63bb9b65-2964-4c10-be5b-55a63ec02fa0.pak"
@@ -30,7 +30,7 @@ EpipEncounters:
 
 # Derpy's EE2 tweaks + Artifact tiers
 Derpy:
-    force_update: False
+    force_update: True
     url: https://drive.google.com/drive/folders/1BQnXOJ-iZm5QfXYwD9WJ0h3JNpPH2_gF
     filenames:
         - "Derpy's EE2 tweaks.pak"

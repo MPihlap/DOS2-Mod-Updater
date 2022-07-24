@@ -165,6 +165,7 @@ class EpipUpdater(Updater):
         latest_epip_version = int(self.soup.find_all("h2")[0].get("id").split("-")[0][1:])
         logging.debug(f"latest_epip_version {latest_epip_version}")
         current_epip = [file for file in listdir() if file.startswith("Epip")]
+        self.current_epip = current_epip
         if len(current_epip) == 0:
             logging.info("No existing Epip Encounters installation found, downloading latest ...")
             return True
@@ -183,9 +184,14 @@ class EpipUpdater(Updater):
         logging.debug(f"link {link}")
         return download_file(link)
 
+    def delete_old(self):
+        for file in self.current_epip:
+            remove(file)
 
     def update(self):
-        return super().update()
+        if self.needs_update():
+            self.download()
+            self.delete_old()
 
 
 def set_loglevel(loglevel):

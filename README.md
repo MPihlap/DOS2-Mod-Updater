@@ -4,7 +4,7 @@ Comes prepackaged with configuration to download the Epic Encounters mod with De
 
 ## How to use
 
-Download the executable and configuration file [from here](https://drive.google.com/file/d/1qENB46k90rgzXdE6bSua7ZCi62PAKRY6/view?usp=sharing).
+Download the executable and configuration file [from here](https://drive.google.com/drive/folders/1P2FopfVwC0DRq3qR2t5mk7kT5B2Yw--J?usp=sharing).
 Place the two files in your DOS II Mods folder. Edit the `mod_updater_config.yaml` file to suit your needs.
 
 ### Configuring the updater

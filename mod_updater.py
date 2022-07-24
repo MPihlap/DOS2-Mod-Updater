@@ -3,7 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import yaml
 
-from os import listdir, replace, rmdir, getcwd, remove
+from os import listdir, replace, rmdir, getcwd, remove, chdir
+from os.path import exists, dirname
 import logging
 from abc import ABC, abstractmethod
 import zipfile
@@ -250,7 +251,12 @@ def main():
                 updater = NoBrainUpdater(url, force_update)
                 updater.update()
     if autorun:
-        subprocess.Popen([executable])
+        if exists(executable):
+            chdir(dirname(executable))
+            subprocess.Popen([executable])
+        else:
+            logging.warning(f"Tried to run the game, but the path '{executable}' is not correct. Edit the mod_updater_config.yaml file to setup autorun.")
+            input("Press ENTER to exit")
 
 if __name__ == "__main__":
     main()

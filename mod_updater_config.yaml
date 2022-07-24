@@ -2,6 +2,7 @@
 # Global settings override individual settings when enabled.
 Global:
     force_update_all: False # Force an update to every mod.
+    loglevel: INFO          # Set to DEBUG for more info while executing
 
 
 ## Mod list ##

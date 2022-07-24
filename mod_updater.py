@@ -188,8 +188,14 @@ class EpipUpdater(Updater):
         return super().update()
 
 
+def set_loglevel(loglevel):
+    if loglevel == "DEBUG":
+        logging.basicConfig(level=logging.DEBUG)
+    elif loglevel == "INFO":
+        logging.basicConfig(level=logging.INFO)
+
+
 def main():
-    logging.basicConfig(level=logging.DEBUG)
 
     current_dir = getcwd()
     if not current_dir.endswith("Divinity Original Sin 2 Definitive Edition\Mods"):
@@ -204,9 +210,10 @@ def main():
             logging.error("Unable to parse yaml. Check your syntax.")
             logging.error(exc)
             exit(1)
-    print(params)
+    logging.debug(f"yaml contents {params}")
     global_settings = params["Global"]
     force_update_all = global_settings["force_update_all"]
+    set_loglevel(global_settings["loglevel"])
     params.pop("Global")
     for mod in params:
         if mod == "EpipEncounters":

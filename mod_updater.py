@@ -203,7 +203,7 @@ def main():
         logging.warning(f"Press ENTER to continue anyway, Ctrl+C to cancel.")
         input()
 
-    with open("updater_config.yaml", "r") as stream:
+    with open("mod_updater_config.yaml", "r") as stream:
         try:
             params = yaml.safe_load(stream)
         except yaml.YAMLError as exc:

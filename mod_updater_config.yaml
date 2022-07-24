@@ -3,6 +3,8 @@
 Global:
     force_update_all: False # Force an update to every mod.
     loglevel: INFO          # Set to DEBUG for more info while executing
+    executable: 'C:\Program Files (x86)\Steam\steamapps\common\Divinity Original Sin 2\DefEd\bin\EoCApp.exe'
+    autorun: True           # If true, the game will be launched after updating
 
 
 ## Mod list ##

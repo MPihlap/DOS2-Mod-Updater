@@ -7,6 +7,7 @@ from os import listdir, replace, rmdir, getcwd, remove
 import logging
 from abc import ABC, abstractmethod
 import zipfile
+import subprocess
 
 
 def move_contents_here(folder):
@@ -220,6 +221,8 @@ def main():
     global_settings = params["Global"]
     force_update_all = global_settings["force_update_all"]
     set_loglevel(global_settings["loglevel"])
+    executable = global_settings["executable"]
+    autorun = global_settings["autorun"]
     params.pop("Global")
     for mod in params:
         if mod == "EpipEncounters":
@@ -246,6 +249,8 @@ def main():
             else:
                 updater = NoBrainUpdater(url, force_update)
                 updater.update()
+    if autorun:
+        subprocess.Popen([executable])
 
 if __name__ == "__main__":
     main()

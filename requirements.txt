@@ -1,0 +1,4 @@
+gdown
+requests
+bs4
+pyyaml

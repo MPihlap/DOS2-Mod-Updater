@@ -1,3 +1,4 @@
+import re
 import gdown
 import requests
 from bs4 import BeautifulSoup
@@ -199,13 +200,14 @@ class EpicEncountersUpdater(FileTimestampUpdater):
 class EpipUpdater(Updater):
 
 
-    def __init__(self, url, force_update=False, metafiles=[]) -> None:
+    def __init__(self, url, force_update=False, metafiles=[], cloud_version=None) -> None:
         super().__init__(force_update=force_update)
         self.url = url
         grab = requests.get(self.url)
         self.soup = BeautifulSoup(grab.text, 'lxml')
         self.metafiles = metafiles
         self.current_epip = []
+        self.cloud_version = cloud_version
 
     def needs_update(self):
         if self.force_update:
@@ -216,7 +218,7 @@ class EpipUpdater(Updater):
                 logging.warn(f"Found metafile at {metafile}, not updating")
                 return False
 
-        latest_epip_version = int(self.soup.find_all("h2")[0].get("id").split("-")[0][1:])
+        latest_epip_version = int(self.cloud_version)
         logging.debug(f"latest_epip_version {latest_epip_version}")
         current_epip = [file for file in listdir() if file.startswith("Epip")]
         self.current_epip = current_epip
@@ -224,7 +226,8 @@ class EpipUpdater(Updater):
             logging.info("No existing Epip Encounters installation found, downloading latest ...")
             return True
         else:
-            current_epip_version = int(current_epip[-1].split("_")[1].split(".")[0][1:])
+            expression = '^EpipEncounters_v?(?P<Version>\d+)\.pak$'
+            current_epip_version = int(re.match(expression, current_epip[-1]).group("Version"))
             if current_epip_version < latest_epip_version:
                 logging.info(f"Current Epip Encounters version {current_epip_version} outdated, downloading latest ...")
                 return True
@@ -300,15 +303,16 @@ def main():
         mod_params = params[mod]
         force_update = mod_params["force_update"] or force_update_all
         url = mod_params["url"]
-        cloud_date = versions.get(mod)
-        cloud_date = cloud_date["Date"] if cloud_date is not None else None
+        mod_version_dict = versions.get(mod)
+        cloud_date = mod_version_dict["Date"] if mod_version_dict is not None else None
+        mod_version = int(mod_version_dict["Version"]) if mod_version_dict is not None else None
         filenames = mod_params.get("filenames", [])
         metafiles = mod_params.get("metafiles", []) # Optional params
         for i, metafile in enumerate(metafiles):
             metafiles[i] = get_metafile(start_dir, metafile)
 
         if mod == "EpipEncounters":
-            updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles)
+            updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version=mod_version)
         elif mod == "EpicEncounters":
             updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_date=cloud_date, metafiles=metafiles)
         elif mod == "Derpy":

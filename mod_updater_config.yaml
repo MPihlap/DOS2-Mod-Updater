@@ -3,8 +3,9 @@
 Global:
     force_update_all: False # Force an update to every mod.
     loglevel: INFO          # Set to DEBUG for more info while executing
-    executable: 'C:\Program Files (x86)\Steam\steamapps\common\Divinity Original Sin 2\DefEd\bin\EoCApp.exe'
+    executable: 'EoCApp.exe'
     autorun: True           # If true, the game will be launched after updating
+    mod_folder: "%UserProfile%/Documents/Larian Studios/Divinity Original Sin 2 Definitive Edition/Mods"
 
 
 ## Mod list ##
@@ -17,7 +18,7 @@ Global:
 
 # Epic Encounters
 EpicEncounters:
-    force_update: True
+    force_update: False
     url: https://drive.google.com/file/d/1loqIeAQsvNGlB2SD4b9QQC2fyb0B_qe9/view?usp=sharing
     filenames:
         - "Epic_Encounters_Core_63bb9b65-2964-4c10-be5b-55a63ec02fa0.pak"
@@ -33,7 +34,7 @@ EpipEncounters:
 
 # Derpy's EE2 tweaks + Artifact tiers
 Derpy:
-    force_update: True
+    force_update: False
     url: https://drive.google.com/drive/folders/1BQnXOJ-iZm5QfXYwD9WJ0h3JNpPH2_gF
     filenames:
         - "Derpy's EE2 tweaks.pak"

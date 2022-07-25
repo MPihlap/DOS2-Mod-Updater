@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import yaml
 
-from os import listdir, replace, rmdir, getcwd, remove, chdir
+from os import listdir, replace, rmdir, getcwd, remove, chdir, environ
 from os.path import exists, dirname
 import logging
 from abc import ABC, abstractmethod
@@ -159,6 +159,7 @@ class EpipUpdater(Updater):
         grab = requests.get(self.url)
         self.soup = BeautifulSoup(grab.text, 'lxml')
         self.metafile = metafile
+        self.current_epip = []
 
     def needs_update(self):
         if self.force_update:
@@ -209,9 +210,9 @@ def get_metafile(executable, metafile):
 
 def main():
 
-    current_dir = getcwd()
-    if not current_dir.endswith("Divinity Original Sin 2 Definitive Edition\Mods"):
-        logging.warning(f"Your current directory {current_dir} does not seem to be correct. The path should end with 'Divinity Original Sin 2 Definitive Edition\Mods'")
+    start_dir = getcwd()
+    if not start_dir.endswith('Divinity Original Sin 2\DefEd\\bin'):
+        logging.warning(f"Your current directory {start_dir} does not seem to be correct. The path should end with 'Divinity Original Sin 2\DefEd\\bin'")
         logging.warning(f"Press ENTER to continue anyway, Ctrl+C to cancel.")
         input()
 
@@ -232,16 +233,19 @@ def main():
     elif loglevel == "INFO":
         logging.basicConfig(level=logging.INFO)
     executable = global_settings["executable"]
-
+    mod_folder = global_settings["mod_folder"]
+    if "%UserProfile%" in mod_folder:
+        mod_folder = mod_folder.replace("%UserProfile%", environ["USERPROFILE"])
     autorun = global_settings["autorun"]
     params.pop("Global")
+    chdir(mod_folder)
     for mod in params:
         if mod == "EpipEncounters":
             mod_params = params[mod]
             force_update = mod_params["force_update"] or force_update_all
             url = mod_params["url"]
             metafile = mod_params["metafile"]
-            metafile = get_metafile(executable, metafile)
+            metafile = get_metafile(start_dir, metafile)
             updater = EpipUpdater(url, force_update=force_update, metafile=metafile)
             updater.update()
         elif mod == "EpicEncounters":
@@ -263,8 +267,8 @@ def main():
                 updater = NoBrainUpdater(url, force_update)
                 updater.update()
     if autorun:
+        chdir(start_dir)
         if exists(executable):
-            chdir(dirname(executable))
             subprocess.Popen([executable])
         else:
             logging.warning(f"Tried to run the game, but the path '{executable}' is not correct. Edit the mod_updater_config.yaml file to setup autorun.")

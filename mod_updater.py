@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import yaml
 
+import os, sys
 from os import listdir, replace, rmdir, getcwd, remove, chdir, environ
 from os.path import exists, dirname
 import logging
@@ -210,7 +211,15 @@ def get_metafile(executable, metafile):
 
 def main():
 
-    start_dir = getcwd()
+    #start_dir = dirname(__file__)
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle, the PyInstaller bootloader
+        # extends the sys module by a flag frozen=True and sets the app
+        # path into variable _MEIPASS'.
+        start_dir = dirname(sys.executable)
+    else:
+        start_dir = dirname(os.path.abspath(__file__))
+    chdir(start_dir) # Move to defed bin folder, if not executing script from there
     if not start_dir.endswith('Divinity Original Sin 2\DefEd\\bin'):
         logging.warning(f"Your current directory {start_dir} does not seem to be correct. The path should end with 'Divinity Original Sin 2\DefEd\\bin'")
         logging.warning(f"Press ENTER to continue anyway, Ctrl+C to cancel.")

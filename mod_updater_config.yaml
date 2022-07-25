@@ -28,6 +28,7 @@ EpicEncounters:
 EpipEncounters:
     force_update: False
     url: https://www.pinewood.team/epip/patchnotes/
+    metafile: '\DefEd\Data\Projects\EpipEncounters_7d32cb52-1cfd-4526-9b84-db4867bf9356\meta.lsx'
 
 
 # Derpy's EE2 tweaks + Artifact tiers

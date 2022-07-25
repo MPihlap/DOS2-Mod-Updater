@@ -9,6 +9,7 @@ import logging
 from abc import ABC, abstractmethod
 import zipfile
 import subprocess
+from pathlib import Path
 
 
 def move_contents_here(folder):
@@ -152,17 +153,20 @@ class EpicEncountersUpdater(FileExistUpdater):
 class EpipUpdater(Updater):
 
 
-    def __init__(self, url, force_update=False) -> None:
+    def __init__(self, url, force_update=False, metafile="") -> None:
         super().__init__(force_update=force_update)
         self.url = url
         grab = requests.get(self.url)
         self.soup = BeautifulSoup(grab.text, 'lxml')
-
+        self.metafile = metafile
 
     def needs_update(self):
         if self.force_update:
             logging.info("Forcing update.")
             return True
+        elif exists(self.metafile): # If metafile exists, never update
+            logging.info(f"Found metafile at {self.metafile}, not updating")
+            return False
 
         latest_epip_version = int(self.soup.find_all("h2")[0].get("id").split("-")[0][1:])
         logging.debug(f"latest_epip_version {latest_epip_version}")
@@ -196,11 +200,11 @@ class EpipUpdater(Updater):
             self.delete_old()
 
 
-def set_loglevel(loglevel):
-    if loglevel == "DEBUG":
-        logging.basicConfig(level=logging.DEBUG)
-    elif loglevel == "INFO":
-        logging.basicConfig(level=logging.INFO)
+def get_metafile(executable, metafile):
+    game_folder = Path(executable).parents[2] # navigate to main game folder
+    logging.debug(f"game_folder {game_folder}")
+    metafile_path = f"{game_folder.absolute()}{metafile}"
+    return metafile_path
 
 
 def main():
@@ -218,11 +222,17 @@ def main():
             logging.error("Unable to parse yaml. Check your syntax.")
             logging.error(exc)
             exit(1)
+
     logging.debug(f"yaml contents {params}")
     global_settings = params["Global"]
     force_update_all = global_settings["force_update_all"]
-    set_loglevel(global_settings["loglevel"])
+    loglevel = global_settings["loglevel"]
+    if loglevel == "DEBUG":
+        logging.basicConfig(level=logging.DEBUG)
+    elif loglevel == "INFO":
+        logging.basicConfig(level=logging.INFO)
     executable = global_settings["executable"]
+
     autorun = global_settings["autorun"]
     params.pop("Global")
     for mod in params:
@@ -230,7 +240,9 @@ def main():
             mod_params = params[mod]
             force_update = mod_params["force_update"] or force_update_all
             url = mod_params["url"]
-            updater = EpipUpdater(url, force_update=force_update)
+            metafile = mod_params["metafile"]
+            metafile = get_metafile(executable, metafile)
+            updater = EpipUpdater(url, force_update=force_update, metafile=metafile)
             updater.update()
         elif mod == "EpicEncounters":
             mod_params = params[mod]

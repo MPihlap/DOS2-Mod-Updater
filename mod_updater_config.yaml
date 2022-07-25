@@ -45,8 +45,8 @@ Derpy:
 
 
 # Runepatch
-RunePatch:
-    force_update: False
-    url: https://cdn.discordapp.com/attachments/608788140550914069/775764883500171304/runepatch.pak
-    filenames:
-        - "runepatch.pak"
+#RunePatch:
+#    force_update: False
+#    url: https://cdn.discordapp.com/attachments/608788140550914069/775764883500171304/runepatch.pak
+#    filenames:
+#        - "runepatch.pak"

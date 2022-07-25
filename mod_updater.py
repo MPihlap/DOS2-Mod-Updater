@@ -11,6 +11,9 @@ from abc import ABC, abstractmethod
 import zipfile
 import subprocess
 from pathlib import Path
+import time
+import datetime
+import json
 
 
 def move_contents_here(folder):
@@ -95,19 +98,25 @@ class Updater(ABC):
 class FileExistUpdater(Updater):
     # Only checks if file exists.
 
-    def __init__(self, url, force_update=False, filenames=None) -> None:
+    def __init__(self, url, force_update=False, filenames=[], metafiles=[]) -> None:
         super().__init__(force_update=force_update)
         self.url = url
         self.filenames = filenames
+        self.metafiles = metafiles
 
     def needs_update(self) -> bool:
         if self.force_update:
             return True
+        for metafile in self.metafiles:
+            if exists(metafile): # If metafile exists, never update
+                logging.warn(f"Found metafile at {metafile}, not updating")
+                return False
         local_files = listdir()
         logging.debug(f"local files: {local_files}")
         for file in self.filenames:
             if file not in local_files:
                 return True
+
         return False
 
 
@@ -117,6 +126,42 @@ class FileExistUpdater(Updater):
 
     def download(self) -> bool:
         return download_file(self.url)
+
+
+class FileTimestampUpdater(FileExistUpdater):
+    # Checks if file exists and if it is older than the cloud version
+    def __init__(self, url, force_update=False, filenames=None, cloud_date=None, metafiles=[]) -> None:
+        super().__init__(url, force_update, filenames)
+        self.cloud_date = cloud_date
+        self.metafiles = metafiles
+
+
+    def is_file_outdated(self, filename, date):
+        u_time = time.mktime(datetime.datetime.strptime(date, "%d/%m/%Y").timetuple())
+        file_time = os.path.getmtime(filename)
+        return u_time > file_time
+
+
+    def needs_update(self) -> bool:
+        if self.force_update:
+            return True
+
+        for metafile in self.metafiles:
+            if exists(metafile): # If metafile exists, don't update
+                logging.warn(f"Found metafile at {metafile}, not updating")
+                return False
+
+        # If files don't exist, update is necessary
+        if super().needs_update():
+            return True
+
+        # If files are outdated, update is necessary
+        for filename in self.filenames:
+            if self.is_file_outdated(filename, self.cloud_date):
+                return True
+
+        return False
+
 
 class NoBrainUpdater(Updater):
     # Download the file, no questions asked. Used when no filenames are specified in the config.
@@ -137,9 +182,9 @@ class NoBrainUpdater(Updater):
         return download_file(self.url)
 
 
-class EpicEncountersUpdater(FileExistUpdater):
-    def __init__(self, url, force_update=False, filenames=None) -> None:
-        super().__init__(url, force_update, filenames)
+class EpicEncountersUpdater(FileTimestampUpdater):
+    def __init__(self, url, force_update=False, filenames=None, cloud_date=None, metafiles=[]) -> None:
+        super().__init__(url, force_update, filenames, cloud_date, metafiles=metafiles)
 
     def needs_update(self) -> bool:
         return super().needs_update()
@@ -154,21 +199,22 @@ class EpicEncountersUpdater(FileExistUpdater):
 class EpipUpdater(Updater):
 
 
-    def __init__(self, url, force_update=False, metafile="") -> None:
+    def __init__(self, url, force_update=False, metafiles=[]) -> None:
         super().__init__(force_update=force_update)
         self.url = url
         grab = requests.get(self.url)
         self.soup = BeautifulSoup(grab.text, 'lxml')
-        self.metafile = metafile
+        self.metafiles = metafiles
         self.current_epip = []
 
     def needs_update(self):
         if self.force_update:
             logging.info("Forcing update.")
             return True
-        elif exists(self.metafile): # If metafile exists, never update
-            logging.info(f"Found metafile at {self.metafile}, not updating")
-            return False
+        for metafile in self.metafiles:
+            if exists(metafile): # If metafile exists, never update
+                logging.warn(f"Found metafile at {metafile}, not updating")
+                return False
 
         latest_epip_version = int(self.soup.find_all("h2")[0].get("id").split("-")[0][1:])
         logging.debug(f"latest_epip_version {latest_epip_version}")
@@ -203,7 +249,7 @@ class EpipUpdater(Updater):
 
 
 def get_metafile(executable, metafile):
-    game_folder = Path(executable).parents[2] # navigate to main game folder
+    game_folder = Path(executable).parents[1] # navigate to main game folder
     logging.debug(f"game_folder {game_folder}")
     metafile_path = f"{game_folder.absolute()}{metafile}"
     return metafile_path
@@ -211,11 +257,7 @@ def get_metafile(executable, metafile):
 
 def main():
 
-    #start_dir = dirname(__file__)
     if getattr(sys, 'frozen', False):
-        # If the application is run as a bundle, the PyInstaller bootloader
-        # extends the sys module by a flag frozen=True and sets the app
-        # path into variable _MEIPASS'.
         start_dir = dirname(sys.executable)
     else:
         start_dir = dirname(os.path.abspath(__file__))
@@ -241,40 +283,42 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     elif loglevel == "INFO":
         logging.basicConfig(level=logging.INFO)
+
     executable = global_settings["executable"]
     mod_folder = global_settings["mod_folder"]
     if "%UserProfile%" in mod_folder:
         mod_folder = mod_folder.replace("%UserProfile%", environ["USERPROFILE"])
     autorun = global_settings["autorun"]
+
+    versions_url = global_settings["versions_url"]
+    grab = requests.get(versions_url)
+    versions = json.loads(grab.text)["Mods"]
     params.pop("Global")
+
     chdir(mod_folder)
     for mod in params:
+        mod_params = params[mod]
+        force_update = mod_params["force_update"] or force_update_all
+        url = mod_params["url"]
+        cloud_date = versions.get(mod)
+        cloud_date = cloud_date["Date"] if cloud_date is not None else None
+        filenames = mod_params.get("filenames", [])
+        metafiles = mod_params.get("metafiles", []) # Optional params
+        for i, metafile in enumerate(metafiles):
+            metafiles[i] = get_metafile(start_dir, metafile)
+
         if mod == "EpipEncounters":
-            mod_params = params[mod]
-            force_update = mod_params["force_update"] or force_update_all
-            url = mod_params["url"]
-            metafile = mod_params["metafile"]
-            metafile = get_metafile(start_dir, metafile)
-            updater = EpipUpdater(url, force_update=force_update, metafile=metafile)
-            updater.update()
+            updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles)
         elif mod == "EpicEncounters":
-            mod_params = params[mod]
-            force_update = mod_params["force_update"] or force_update_all
-            url = mod_params["url"]
-            filenames = mod_params["filenames"]
-            updater = EpicEncountersUpdater(url, force_update, filenames=filenames)
-            updater.update()
+            updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_date=cloud_date, metafiles=metafiles)
+        elif mod == "Derpy":
+            updater = FileTimestampUpdater(url, force_update=force_update, filenames=filenames, cloud_date=cloud_date, metafiles=metafiles)
         else: # Generic mod downloader
-            mod_params = params[mod]
-            force_update = mod_params["force_update"] or force_update_all
-            url = mod_params["url"]
-            if "filenames" in mod_params.keys():
-                filenames = mod_params["filenames"]
-                updater = FileExistUpdater(url, force_update=force_update, filenames=filenames)
-                updater.update()
+            if len(filenames):
+                updater = FileExistUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles)
             else:
                 updater = NoBrainUpdater(url, force_update)
-                updater.update()
+        updater.update()
     if autorun:
         chdir(start_dir)
         if exists(executable):

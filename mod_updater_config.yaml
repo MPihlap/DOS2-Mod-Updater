@@ -6,7 +6,7 @@ Global:
     executable: 'EoCApp.exe'
     autorun: True           # If true, the game will be launched after updating
     mod_folder: "%UserProfile%/Documents/Larian Studios/Divinity Original Sin 2 Definitive Edition/Mods"
-
+    versions_url: "https://www.pinewood.team/EE/versions.json"
 
 ## Mod list ##
 # To add a mod, make a new entry with a similar structure as the following ones.
@@ -23,13 +23,16 @@ EpicEncounters:
     filenames:
         - "Epic_Encounters_Core_63bb9b65-2964-4c10-be5b-55a63ec02fa0.pak"
         - "Epic_Encounters_d2d724e6-13c2-47c3-b356-19c3ff8bc622.pak"
-
+    metafiles:
+        - '\DefEd\Data\Mods\Epic_Encounters_Core_63bb9b65-2964-4c10-be5b-55a63ec02fa0\meta.lsx'
+        - '\DefEd\Data\Mods\Epic_Encounters_d2d724e6-13c2-47c3-b356-19c3ff8bc622\meta.lsx'
 
 # Epip Encounters
 EpipEncounters:
     force_update: False
     url: https://www.pinewood.team/epip/patchnotes/
-    metafile: '\DefEd\Data\Projects\EpipEncounters_7d32cb52-1cfd-4526-9b84-db4867bf9356\meta.lsx'
+    metafiles:
+        - '\DefEd\Data\Mods\EpipEncounters_7d32cb52-1cfd-4526-9b84-db4867bf9356\meta.lsx'
 
 
 # Derpy's EE2 tweaks + Artifact tiers

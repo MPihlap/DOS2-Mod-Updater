@@ -1,3 +1,11 @@
+# testing py files
+
+playground.py
+
+# google credentials
+*token.json
+*credentials.json
+
 # dos2 mod archives
 *.pak
 OsiUpdateChannel.txt

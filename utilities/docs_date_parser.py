@@ -19,9 +19,6 @@ SCOPES = ['https://www.googleapis.com/auth/documents.readonly']
 EE_DOCUMENT_ID = '1TB5AR1xkLTPphnbDmQbqqZ3pCi-9ZTI5hUbbTKKiCA4'
 DERPY_DOCUMENT_ID = '1B4yVuvYlT062HXP7-7gbgpb0MH2d-mWBqWOYGOtbceY'
 
-USA_DATE_EXPRESSION = '(0[1-9]|1[012]|[1-9])[- /.](0[1-9]|[12][0-9]|3[01]|[1-9])[- /.](19|20)\d\d'
-
-
 def parse_ee_date(document):
     body = document.get("body")["content"][1:]
     for el in body:
@@ -80,6 +77,9 @@ def main():
     ee_document = get_document(EE_DOCUMENT_ID)
     print(f"EE latest:{parse_ee_date(ee_document)}")
 
+    # Outputs:
+    # Derpy latest:24/07/2022
+    # EE latest:22/07/2022
 
 
 if __name__ == '__main__':

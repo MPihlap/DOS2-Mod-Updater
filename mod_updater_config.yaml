@@ -23,7 +23,7 @@ ScriptExtender:
         - "ScriptExtenderUpdaterConfig.json"
     config:
         "UpdateChannel": "Devel" # or "Release" for stable releases only. Devel is required for Epip
-        "Debug": true
+        "Debug": false
 
 # Epic Encounters
 EpicEncounters:

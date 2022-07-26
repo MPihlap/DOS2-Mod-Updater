@@ -1,6 +1,6 @@
 # DOS2-Mod-Updater
 Utility to automate the downloading of mods with frequent updates.
-Comes prepackaged with configuration to download the Epic Encounters mod with Derpy Moa's and Pip's addons.
+Comes prepackaged with configuration to download the Epic Encounters mod with Derpy Moa's and Pip's addons as well as the Norbyte script extender.
 
 ## How to use
 

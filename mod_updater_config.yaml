@@ -15,6 +15,13 @@ Global:
 # If filenames are specified for a mod, then that mod is not downloaded if the files are already there.
 #   Use the force_update parameter or delete the files when you want to force an update.
 
+# Norbyte script extender
+ScriptExtender:
+    force_update: False
+    url: "https://github.com/Norbyte/ositools/releases"
+    filenames:
+        - "OsiUpdateChannel.txt"
+
 
 # Epic Encounters
 EpicEncounters:

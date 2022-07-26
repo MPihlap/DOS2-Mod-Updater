@@ -1,11 +1,12 @@
 import re
+from tracemalloc import start
 import gdown
 import requests
 from bs4 import BeautifulSoup
 import yaml
 
 import os, sys
-from os import listdir, replace, rmdir, getcwd, remove, chdir, environ
+from os import getcwdb, listdir, replace, rmdir, getcwd, remove, chdir, environ
 from os.path import exists, dirname
 import logging
 from abc import ABC, abstractmethod
@@ -251,6 +252,23 @@ class EpipUpdater(Updater):
             self.delete_old()
 
 
+class ScriptExtenderUpdater(FileExistUpdater):
+    def __init__(self, url, force_update=False, filenames=[], metafiles=[]) -> None:
+        super().__init__(url, force_update, filenames, metafiles)
+
+    def download(self) -> bool:
+        grab = requests.get(self.url)
+        soup = BeautifulSoup(grab.text, "html.parser")
+        link = soup.find("a", href=True, text="from here").get("href")
+        download_success = download_file(link, zip=True)
+        if download_success:
+            with open(self.filenames[0], "w") as file:
+                file.write("Devel")
+            return True
+        else:
+            return False
+
+
 def get_metafile(executable, metafile):
     game_folder = Path(executable).parents[1] # navigate to main game folder
     logging.debug(f"game_folder {game_folder}")
@@ -311,7 +329,12 @@ def main():
         for i, metafile in enumerate(metafiles):
             metafiles[i] = get_metafile(start_dir, metafile)
 
-        if mod == "EpipEncounters":
+        if mod == "ScriptExtender":
+            chdir(start_dir)
+            updater = ScriptExtenderUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles)
+            updater.update()
+            chdir(mod_folder)
+        elif mod == "EpipEncounters":
             updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version=mod_version)
         elif mod == "EpicEncounters":
             updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_date=cloud_date, metafiles=metafiles)

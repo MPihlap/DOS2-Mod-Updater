@@ -1,5 +1,7 @@
 # dos2 mod archives
 *.pak
+OsiUpdateChannel.txt
+*.dll
 
 #### Auto-generated python stuff below ####
 

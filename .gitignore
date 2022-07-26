@@ -9,6 +9,7 @@ playground.py
 # dos2 mod archives
 *.pak
 OsiUpdateChannel.txt
+ScriptExtenderUpdaterConfig.json
 *.dll
 
 #### Auto-generated python stuff below ####

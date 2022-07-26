@@ -253,8 +253,9 @@ class EpipUpdater(Updater):
 
 
 class ScriptExtenderUpdater(FileExistUpdater):
-    def __init__(self, url, force_update=False, filenames=[], metafiles=[]) -> None:
+    def __init__(self, url, force_update=False, filenames=[], metafiles=[], config=None) -> None:
         super().__init__(url, force_update, filenames, metafiles)
+        self.config = config
 
     def download(self) -> bool:
         grab = requests.get(self.url)
@@ -262,8 +263,10 @@ class ScriptExtenderUpdater(FileExistUpdater):
         link = soup.find("a", href=True, text="from here").get("href")
         download_success = download_file(link, zip=True)
         if download_success:
-            with open(self.filenames[0], "w") as file:
-                file.write("Devel")
+            json_object = json.dumps(self.config, indent=4)
+            # Writing to sample.json
+            with open(self.filenames[0], "w") as outfile:
+                outfile.write(json_object)
             return True
         else:
             return False
@@ -331,7 +334,8 @@ def main():
 
         if mod == "ScriptExtender":
             chdir(start_dir)
-            updater = ScriptExtenderUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles)
+            config = mod_params["config"]
+            updater = ScriptExtenderUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles, config=config)
             updater.update()
             chdir(mod_folder)
         elif mod == "EpipEncounters":

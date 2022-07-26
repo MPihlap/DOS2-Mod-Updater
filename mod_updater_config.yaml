@@ -20,8 +20,10 @@ ScriptExtender:
     force_update: False
     url: "https://github.com/Norbyte/ositools/releases"
     filenames:
-        - "OsiUpdateChannel.txt"
-
+        - "ScriptExtenderUpdaterConfig.json"
+    config:
+        "UpdateChannel": "Devel" # or "Release" for stable releases only. Devel is required for Epip
+        "Debug": true
 
 # Epic Encounters
 EpicEncounters:

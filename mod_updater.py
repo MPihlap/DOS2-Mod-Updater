@@ -228,7 +228,11 @@ class EpipUpdater(Updater):
             return True
         else:
             expression = '^EpipEncounters_v?(?P<Version>\d+)\.pak$'
-            current_epip_version = int(re.match(expression, current_epip[-1]).group("Version"))
+            match = re.match(expression, current_epip[-1])
+            if match is None:
+                logging.warning("Unable to detect version of local Epip file, forcing update")
+                return True
+            current_epip_version = int(match.group("Version"))
             if current_epip_version < latest_epip_version:
                 logging.info(f"Current Epip Encounters version {current_epip_version} outdated, downloading latest ...")
                 return True

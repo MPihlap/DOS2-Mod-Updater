@@ -1,5 +1,4 @@
 import re
-from tracemalloc import start
 import gdown
 import requests
 from bs4 import BeautifulSoup
@@ -205,7 +204,7 @@ class EpipUpdater(Updater):
         super().__init__(force_update=force_update)
         self.url = url
         grab = requests.get(self.url)
-        self.soup = BeautifulSoup(grab.text, 'lxml')
+        self.soup = BeautifulSoup(grab.text, 'html.parser')
         self.metafiles = metafiles
         self.current_epip = []
         self.cloud_version = cloud_version
@@ -342,6 +341,7 @@ def main():
             updater = ScriptExtenderUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles, config=config)
             updater.update()
             chdir(mod_folder)
+            continue
         elif mod == "EpipEncounters":
             updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version=mod_version)
         elif mod == "EpicEncounters":

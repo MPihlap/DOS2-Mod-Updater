@@ -131,9 +131,10 @@ class FileExistUpdater(Updater):
 
 class FileTimestampUpdater(FileExistUpdater):
     # Checks if file exists and if it is older than the cloud version
-    def __init__(self, url, force_update=False, filenames=None, cloud_date=None, metafiles=[]) -> None:
+    def __init__(self, url, force_update=False, filenames=None, cloud_version_dict=None, local_version_dict=None, metafiles=[]) -> None:
         super().__init__(url, force_update, filenames)
-        self.cloud_date = cloud_date
+        self.cloud_version_dict = cloud_version_dict
+        self.local_version_dict = local_version_dict
         self.metafiles = metafiles
 
 
@@ -141,6 +142,13 @@ class FileTimestampUpdater(FileExistUpdater):
         u_time = time.mktime(datetime.datetime.strptime(date, "%d/%m/%Y").timetuple())
         file_time = os.path.getmtime(filename)
         return u_time > file_time
+
+
+    def is_version_outdated(self):
+        if len(self.local_version_dict) == 0:
+            return True # if there is no entry, assume an update is necessary
+
+        return int(self.cloud_version_dict["Version"]) > int(self.local_version_dict["Version"])
 
 
     def needs_update(self) -> bool:
@@ -158,10 +166,16 @@ class FileTimestampUpdater(FileExistUpdater):
 
         # If files are outdated, update is necessary
         for filename in self.filenames:
-            if self.is_file_outdated(filename, self.cloud_date):
+            if self.is_file_outdated(filename, self.cloud_version_dict["Date"]) or self.is_version_outdated():
                 return True
 
         return False
+
+    def update(self):
+        if self.needs_update():
+            if self.download():
+                self.local_version_dict["Version"] = self.cloud_version_dict["Version"]
+                self.local_version_dict["Date"] = self.cloud_version_dict["Date"]
 
 
 class NoBrainUpdater(Updater):
@@ -184,8 +198,8 @@ class NoBrainUpdater(Updater):
 
 
 class EpicEncountersUpdater(FileTimestampUpdater):
-    def __init__(self, url, force_update=False, filenames=None, cloud_date=None, metafiles=[]) -> None:
-        super().__init__(url, force_update, filenames, cloud_date, metafiles=metafiles)
+    def __init__(self, url, force_update=False, filenames=None, cloud_version_dict=None, local_version_dict=None, metafiles=[]) -> None:
+        super().__init__(url, force_update, filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
 
     def needs_update(self) -> bool:
         return super().needs_update()
@@ -200,14 +214,15 @@ class EpicEncountersUpdater(FileTimestampUpdater):
 class EpipUpdater(Updater):
 
 
-    def __init__(self, url, force_update=False, metafiles=[], cloud_version=None) -> None:
+    def __init__(self, url, force_update=False, metafiles=[], cloud_version_dict=None, local_version_dict=None) -> None:
         super().__init__(force_update=force_update)
         self.url = url
         grab = requests.get(self.url)
         self.soup = BeautifulSoup(grab.text, 'html.parser')
         self.metafiles = metafiles
         self.current_epip = []
-        self.cloud_version = cloud_version
+        self.cloud_version_dict = cloud_version_dict
+        self.local_version_dict = local_version_dict
 
     def needs_update(self):
         if self.force_update:
@@ -218,7 +233,7 @@ class EpipUpdater(Updater):
                 logging.warn(f"Found metafile at {metafile}, not updating")
                 return False
 
-        latest_epip_version = int(self.cloud_version)
+        latest_epip_version = int(self.cloud_version_dict["Version"])
         logging.debug(f"latest_epip_version {latest_epip_version}")
         current_epip = [file for file in listdir() if file.startswith("Epip")]
         self.current_epip = current_epip
@@ -226,17 +241,20 @@ class EpipUpdater(Updater):
             logging.info("No existing Epip Encounters installation found, downloading latest ...")
             return True
         else:
-            expression = '^EpipEncounters_v?(?P<Version>\d+)\.pak$'
-            match = re.match(expression, current_epip[-1])
-            if match is None:
-                logging.warning("Unable to detect version of local Epip file, forcing update")
-                return True
-            current_epip_version = int(match.group("Version"))
+            if len(self.local_version_dict) != 0:
+                current_epip_version = int(self.local_version_dict["Version"])
+            else:
+                expression = '^EpipEncounters_v?(?P<Version>\d+)\.pak$'
+                match = re.match(expression, current_epip[-1])
+                if match is None:
+                    logging.warning("Unable to detect version of local Epip file, forcing update")
+                    return True
+                current_epip_version = int(match.group("Version"))
             if current_epip_version < latest_epip_version:
-                logging.info(f"Current Epip Encounters version {current_epip_version} outdated, downloading latest ...")
+                logging.debug(f"Current Epip Encounters version {current_epip_version} outdated, downloading latest ...")
                 return True
             else:
-                logging.info(f"Current Epip Encounters version {current_epip_version} is up to date, no update necessary.")
+                logging.debug(f"Current Epip Encounters version {current_epip_version} is up to date, no update necessary.")
                 return False
 
 
@@ -251,8 +269,11 @@ class EpipUpdater(Updater):
 
     def update(self):
         if self.needs_update():
-            self.download()
-            self.delete_old()
+            download_success = self.download()
+            if download_success:
+                self.delete_old()
+                self.local_version_dict["Version"] = self.cloud_version_dict["Version"]
+                self.local_version_dict["Date"] = self.cloud_version_dict["Date"]
 
 
 class ScriptExtenderUpdater(FileExistUpdater):
@@ -323,7 +344,13 @@ def main():
 
     versions_url = global_settings["versions_url"]
     grab = requests.get(versions_url)
-    versions = json.loads(grab.text)["Mods"]
+    cloud_versions = json.loads(grab.text)["Mods"]
+    try:
+        with open("local_versions.json") as file:
+            local_versions = json.load(file)
+    except FileNotFoundError:
+        logging.warning("Local version file not found. Creating new file.")
+        local_versions = {"Mods":{}}
     params.pop("Global")
 
     chdir(mod_folder)
@@ -331,9 +358,15 @@ def main():
         mod_params = params[mod]
         force_update = mod_params["force_update"] or force_update_all
         url = mod_params["url"]
-        mod_version_dict = versions.get(mod)
-        cloud_date = mod_version_dict["Date"] if mod_version_dict is not None else None
-        mod_version = int(mod_version_dict["Version"]) if mod_version_dict is not None else None
+        cloud_version_dict = cloud_versions.get(mod)
+        #cloud_date = cloud_version_dict["Date"] if cloud_version_dict is not None else None
+        #cloud_version = int(cloud_version_dict["Version"]) if cloud_version_dict is not None else None
+
+        local_version_dict = local_versions["Mods"].get(mod)
+        if local_version_dict is None and cloud_version_dict is not None:
+            logging.debug("Creating new local entry for {mod}")
+            local_versions["Mods"][mod] = {}
+            local_version_dict = local_versions["Mods"].get(mod)
         filenames = mod_params.get("filenames", [])
         metafiles = mod_params.get("metafiles", []) # Optional params
         for i, metafile in enumerate(metafiles):
@@ -347,17 +380,22 @@ def main():
             chdir(mod_folder)
             continue
         elif mod == "EpipEncounters":
-            updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version=mod_version)
+            updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict)
         elif mod == "EpicEncounters":
-            updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_date=cloud_date, metafiles=metafiles)
+            updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
         elif mod == "Derpy":
-            updater = FileTimestampUpdater(url, force_update=force_update, filenames=filenames, cloud_date=cloud_date, metafiles=metafiles)
+            updater = FileTimestampUpdater(url, force_update=force_update, filenames=filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
         else: # Generic mod downloader
             if len(filenames):
                 updater = FileExistUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles)
             else:
                 updater = NoBrainUpdater(url, force_update)
         updater.update()
+
+    with open("local_versions.json", "w") as file:
+        json_object = json.dumps(local_versions, indent=4)
+        file.write(json_object)
+
     if autorun:
         chdir(start_dir)
         if exists(executable):

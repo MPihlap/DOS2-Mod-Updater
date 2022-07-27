@@ -392,12 +392,12 @@ def main():
                 updater = NoBrainUpdater(url, force_update)
         updater.update()
 
+    chdir(start_dir)
     with open("local_versions.json", "w") as file:
         json_object = json.dumps(local_versions, indent=4)
         file.write(json_object)
 
     if autorun:
-        chdir(start_dir)
         if exists(executable):
             subprocess.Popen([executable])
         else:

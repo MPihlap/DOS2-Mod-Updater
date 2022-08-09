@@ -60,7 +60,7 @@ def download_file(url, target_filename=None, zip=False):
                 remove(file_name)
         return True
     except Exception as e:
-        logging.warning(e)
+        logging.exception(e)
         logging.warning(f"Downloading url {url} unsuccessful.")
         return False
 
@@ -305,12 +305,38 @@ def get_metafile(executable, metafile):
 
 def set_loglevel(loglevel):
     if loglevel == "DEBUG":
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler("mod_updater_debug.log", mode="w"),
+            logging.StreamHandler()
+        ])
     elif loglevel == "INFO":
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    else:
+        error = ValueError(f"Incorrect debug level specified in yaml: {loglevel}. Please choose either DEBUG or INFO")
+        logging.exception(error)
+        input("Press ENTER to exit")
+        exit(1)
+
+
+def print_title():
+    print(r"""    ____   ____  _____ ___      __  ___ ____   ____     __  __ ____   ____   ___   ______ ______ ____
+   / __ \ / __ \/ ___/|__ \    /  |/  // __ \ / __ \   / / / // __ \ / __ \ /   | /_  __// ____// __ \
+  / / / // / / /\__ \ __/ /   / /|_/ // / / // / / /  / / / // /_/ // / / // /| |  / /  / __/  / /_/ /
+ / /_/ // /_/ /___/ // __/   / /  / // /_/ // /_/ /  / /_/ // ____// /_/ // ___ | / /  / /___ / _, _/
+/_____/ \____//____//____/  /_/  /_/ \____//_____/   \____//_/    /_____//_/  |_|/_/  /_____//_/ |_|
+                                                                                                      """)
+    print(r"""                   __          __  ___      __
+                  / /  __ __  /  |/  /___  / /___
+                 / _ \/ // / / /|_/ // -_)/ /(_-<
+                /_.__/\_, / /_/  /_/ \__//_//___/
+                     /___/                       """)
 
 
 def main():
+    print_title()
 
     if getattr(sys, 'frozen', False):
         start_dir = dirname(sys.executable)
@@ -322,11 +348,17 @@ def main():
         print(f"Press ENTER to continue anyway, Ctrl+C to cancel.")
         input()
 
-    with open("mod_updater_config.yaml", "r") as stream:
-        try:
-            params = yaml.safe_load(stream) # Throws yaml parse error
-        except yaml.YAMLError as exc:
-            raise yaml.YAMLError("Unable to parse yaml. Check your syntax.")
+    try:
+        with open("mod_updater_config.yaml", "r") as stream:
+            try:
+                params = yaml.safe_load(stream) # Throws yaml parse error
+            except yaml.YAMLError as exc:
+                raise yaml.YAMLError("Unable to parse yaml. Check your syntax.")
+    except FileNotFoundError as e:
+        logging.exception(e)
+        logging.error("Please make sure the mod_updater_config.yaml file is in the same folder as the mod_updater.exe")
+        input("Press ENTER to exit")
+        exit(1)
 
     global_settings = params["Global"]
     force_update_all = global_settings["force_update_all"]
@@ -334,7 +366,6 @@ def main():
     set_loglevel(loglevel)
 
     logging.debug(f"yaml contents {params}")
-
 
     executable = global_settings["executable"]
     mod_folder = global_settings["mod_folder"]
@@ -352,45 +383,47 @@ def main():
         logging.warning("Local version file not found. Creating new file.")
         local_versions = {"Mods":{}}
     params.pop("Global")
+    try:
+        chdir(mod_folder)
+        for mod in params:
+            mod_params = params[mod]
+            force_update = mod_params["force_update"] or force_update_all
+            url = mod_params["url"]
+            cloud_version_dict = cloud_versions.get(mod)
 
-    chdir(mod_folder)
-    for mod in params:
-        mod_params = params[mod]
-        force_update = mod_params["force_update"] or force_update_all
-        url = mod_params["url"]
-        cloud_version_dict = cloud_versions.get(mod)
-        #cloud_date = cloud_version_dict["Date"] if cloud_version_dict is not None else None
-        #cloud_version = int(cloud_version_dict["Version"]) if cloud_version_dict is not None else None
-
-        local_version_dict = local_versions["Mods"].get(mod)
-        if local_version_dict is None and cloud_version_dict is not None:
-            logging.debug("Creating new local entry for {mod}")
-            local_versions["Mods"][mod] = {}
             local_version_dict = local_versions["Mods"].get(mod)
-        filenames = mod_params.get("filenames", [])
-        metafiles = mod_params.get("metafiles", []) # Optional params
-        for i, metafile in enumerate(metafiles):
-            metafiles[i] = get_metafile(start_dir, metafile)
+            if local_version_dict is None and cloud_version_dict is not None:
+                logging.debug("Creating new local entry for {mod}")
+                local_versions["Mods"][mod] = {}
+                local_version_dict = local_versions["Mods"].get(mod)
+            filenames = mod_params.get("filenames", [])
+            metafiles = mod_params.get("metafiles", []) # Optional params
+            for i, metafile in enumerate(metafiles):
+                metafiles[i] = get_metafile(start_dir, metafile)
 
-        if mod == "ScriptExtender":
-            chdir(start_dir)
-            config = mod_params["config"]
-            updater = ScriptExtenderUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles, config=config)
+            if mod == "ScriptExtender":
+                chdir(start_dir)
+                config = mod_params["config"]
+                updater = ScriptExtenderUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles, config=config)
+                updater.update()
+                chdir(mod_folder)
+                continue
+            elif mod == "EpipEncounters":
+                updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict)
+            elif mod == "EpicEncounters":
+                updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
+            elif mod == "Derpy":
+                updater = FileTimestampUpdater(url, force_update=force_update, filenames=filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
+            else: # Generic mod downloader
+                if len(filenames):
+                    updater = FileExistUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles)
+                else:
+                    updater = NoBrainUpdater(url, force_update)
             updater.update()
-            chdir(mod_folder)
-            continue
-        elif mod == "EpipEncounters":
-            updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict)
-        elif mod == "EpicEncounters":
-            updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
-        elif mod == "Derpy":
-            updater = FileTimestampUpdater(url, force_update=force_update, filenames=filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
-        else: # Generic mod downloader
-            if len(filenames):
-                updater = FileExistUpdater(url, force_update=force_update, filenames=filenames, metafiles=metafiles)
-            else:
-                updater = NoBrainUpdater(url, force_update)
-        updater.update()
+    except Exception as e:
+        logging.exception(e)
+        input("Press ENTER to exit")
+        exit(1)
 
     chdir(start_dir)
     with open("local_versions.json", "w") as file:
@@ -401,8 +434,9 @@ def main():
         if exists(executable):
             subprocess.Popen([executable])
         else:
-            logging.warning(f"Tried to run the game, but the path '{executable}' is not correct. Edit the mod_updater_config.yaml file to setup autorun.")
+            logging.error(f"Tried to run the game, but the path '{executable}' is not correct. Edit the mod_updater_config.yaml file to setup autorun.")
             input("Press ENTER to exit")
+            exit(1)
 
 if __name__ == "__main__":
     main()

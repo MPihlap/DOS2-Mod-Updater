@@ -17,6 +17,8 @@ jobs:
     - run: pyinstaller --onefile mod_updater.py
     # Optionally verify that it works (provided that it does not need user interaction)
     # - ./dist/mod_updater/mod_updater
+    - run: cp mod_updater_config.yaml dist/
     - uses: actions/upload-artifact@v2
       with:
+        name: mod_updater
         path: dist/*

@@ -18,17 +18,21 @@ jobs:
       # Optionally verify that it works (provided that it does not need user interaction)
       # - ./dist/mod_updater/mod_updater
       - run: cp mod_updater_config.yaml dist/
-      - uses: actions/upload-artifact@v2
+      - uses: vimtor/action-zip@v1
         with:
-          name: "mod_updater_${{github.ref_name}}"
-          path: dist/*
+          files: dist/mod_updater_config.yaml dist/mod_updater.exe
+          dest: ./dist/mod_updater_${{github.ref_name}}.zip
+      #- uses: actions/upload-artifact@v2
+      #  with:
+      #    name: "mod_updater_${{github.ref_name}}"
+      #    path: dist/*
 
-      - uses: actions/download-artifact@v3
-        with:
-          name: mod_updater_${{github.ref_name}}
-          path: dist/
-      - name: Display structure of downloaded files
-        run: ls -R
+      #- uses: actions/download-artifact@v3
+      #  with:
+      #    name: mod_updater_${{github.ref_name}}
+      #    path: dist/
+      #- name: Display structure of downloaded files
+      #  run: ls -R
 
       - name: release
         uses: actions/create-release@v1

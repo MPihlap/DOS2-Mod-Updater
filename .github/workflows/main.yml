@@ -27,6 +27,8 @@ jobs:
         with:
           name: mod_updater_${{github.ref_name}}
           path: dist/
+      - name: Display structure of downloaded files
+        run: ls -R
 
       - name: release
         uses: actions/create-release@v1

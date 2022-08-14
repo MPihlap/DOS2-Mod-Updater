@@ -25,6 +25,11 @@ jobs:
           name: "mod_updater_${{github.ref_name}}"
           path: dist/*
 
+      - uses: actions/download-artifact@v3
+      with:
+        name: mod_updater_${{github.ref_name}}
+        path: dist/
+
       - name: release
         uses: actions/create-release@v1
         id: create_release

@@ -1,25 +1,43 @@
-name: Package Application with Pyinstaller
-
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: 'windows-latest'
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
 
-    - name: Package Application
-      uses: JackMcKew/pyinstaller-action-windows@main
-      with:
-        path: ./
+      - run: pip install -r requirements.txt pyinstaller
+      - run: pyinstaller --onefile mod_updater.py
+      - run: cp mod_updater_config.yaml dist/
+      - uses: vimtor/action-zip@v1
+        with:
+          files: dist/mod_updater_config.yaml dist/mod_updater.exe
+          dest: ./dist/mod_updater_${{github.ref_name}}.zip
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: mod_updater
-        path: ./
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: "TEST RELEASE DOS2 Mod Updater ${{github.ref_name}}"
+          tag_name: ${{ github.ref }}
+          #body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: upload windows artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/mod_updater_${{github.ref_name}}.zip
+          asset_name: mod_updater_${{github.ref_name}}.zip
+          asset_content_type: application/zip

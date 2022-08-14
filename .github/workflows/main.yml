@@ -22,5 +22,5 @@ jobs:
     - run: cp mod_updater_config.yaml dist/
     - uses: actions/upload-artifact@v2
       with:
-        name: "mod_updater_${{github.ref_name}}""
+        name: "mod_updater_${{github.ref_name}}"
         path: dist/*

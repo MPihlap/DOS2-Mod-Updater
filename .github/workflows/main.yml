@@ -2,9 +2,9 @@ name: Package Application with Pyinstaller
 
 on:
   push:
-    branches: [ main ]
+    branches: [ release-test ]
   pull_request:
-    branches: [ main ]
+    branches: [ release-test ]
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Package Application
-      uses: JackMcKew/pyinstaller-action-windows@main
+      uses: JackMcKew/pyinstaller-action-windows@release-test
       with:
         path: ./
 

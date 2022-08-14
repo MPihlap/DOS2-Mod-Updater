@@ -6,8 +6,6 @@ on:
 jobs:
   build:
     runs-on: 'windows-latest'
-    strategy:
-      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
@@ -26,9 +24,9 @@ jobs:
           path: dist/*
 
       - uses: actions/download-artifact@v3
-      with:
-        name: mod_updater_${{github.ref_name}}
-        path: dist/
+        with:
+          name: mod_updater_${{github.ref_name}}
+          path: dist/
 
       - name: release
         uses: actions/create-release@v1

@@ -27,7 +27,7 @@ jobs:
         with:
           draft: false
           prerelease: false
-          release_name: "TEST RELEASE DOS2 Mod Updater ${{github.ref_name}}"
+          release_name: "DOS2 Mod Updater ${{github.ref_name}}"
           tag_name: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ github.token }}

@@ -4,8 +4,8 @@ Comes prepackaged with configuration to download the Epic Encounters mod with De
 
 ## How to use
 
-Download the executable and configuration file [from here](https://mega.nz/folder/eNolnT7Y#XFwo362dEKq2vsoFO2aL4Q).
-Place the two files in your DOS II definitive edition bin folder (sth like "\steamapps\common\Divinity Original Sin 2\DefEd\bin").
+Download the `mod_updater_v*.*.*.zip` file [from the Releases](https://github.com/MPihlap/DOS2-Mod-Updater/releases).
+Extract the two files in your DOS II definitive edition bin folder (sth like "\steamapps\common\Divinity Original Sin 2\DefEd\bin").
 Edit the `mod_updater_config.yaml` file to suit your needs.
 By default, the mod updater is configured to download the latest versions of the script extender, Epic Encounters, Epip Encounters and Derpy Moas's addons.
 

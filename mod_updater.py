@@ -15,6 +15,7 @@ from pathlib import Path
 import time
 import datetime
 import json
+import errno
 
 
 def move_contents_here(folder):
@@ -371,6 +372,18 @@ def main():
     mod_folder = global_settings["mod_folder"]
     if "%UserProfile%" in mod_folder:
         mod_folder = mod_folder.replace("%UserProfile%", environ["USERPROFILE"])
+        if not exists(mod_folder):
+            onedrive_mod_folder = mod_folder.replace("Documents", os.path.join("OneDrive", "Documents"))
+            print(onedrive_mod_folder)
+            if exists(onedrive_mod_folder):
+                mod_folder = onedrive_mod_folder
+            else:
+                e = FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), mod_folder)
+                logging.exception(e)
+                logging.error(f"Unable to locate mod folder! Make sure it is configured correctly in the mod_updater_config.yaml file.")
+                input("Press ENTER to exit")
+                exit(1)
+
     autorun = global_settings["autorun"]
 
     versions_url = global_settings["versions_url"]

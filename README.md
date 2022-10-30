@@ -18,11 +18,31 @@ By default, the mod updater is configured to download the latest versions of the
 
 Now when you launch the game from Steam, it will update your mods and then launch the game.
 
-
 ### Configuring the updater
 
 To add new mods or change the options for existing ones, open the `mod_updater_config.yaml` file in a text editor.
 Further instructions and examples can be found there.
+
+### Common issues and how to solve them
+
+#### Version mismatch / can't build story / etc..
+
+This generally means that something went wrong with detecting the latest versions of the mod and they are out of sync.
+You can bruteforce your mods to update to the latest available version by setting the `force_update_all` parameter to `True` in the `mod_updater_config.yaml` file.
+Once fixed, set it back to `False` to resume normal workings of the updater.
+
+#### Epip features are broken
+
+Could be that they are simply broken, but the issue can often be the script extender.
+Make sure the script extender is using the `Release` update channel in the `mod_updater_config.yaml` file.
+If it is set to `Devel`, set it to `Release`, delete the `ScriptExtenderUpdaterConfig.json` file and run the mod updater again.
+
+#### Unable to locate mod folder
+
+The updater does its best to auto-detect your DOSII mods folder.
+On some occasions, its best is not enough.
+If this happens, edit the `mod_updater_config.yaml` file and replace the `mod_folder` parameter with your actual mod folder.
+
 
 ## How to develop / run natively
 0. Clone the repository

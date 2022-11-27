@@ -31,9 +31,8 @@ This generally means that something went wrong with detecting the latest version
 You can bruteforce your mods to update to the latest available version by setting the `force_update_all` parameter to `True` in the `mod_updater_config.yaml` file.
 Once fixed, set it back to `False` to resume normal workings of the updater.
 
-#### Epip features are broken
+#### Script extender version is wrong / Epip features are broken
 
-Could be that they are simply broken, but the issue can often be the script extender.
 Make sure the script extender is using the `Release` update channel in the `mod_updater_config.yaml` file.
 If it is set to `Devel`, set it to `Release`, delete the `ScriptExtenderUpdaterConfig.json` file and run the mod updater again.
 

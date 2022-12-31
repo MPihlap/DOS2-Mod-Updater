@@ -25,6 +25,10 @@ Further instructions and examples can be found there.
 
 ### Common issues and how to solve them
 
+#### Cannot retrieve the public link of the file...
+
+Download the latest version of the updater from Releases and let me know if the issue persists.
+
 #### Version mismatch / can't build story / etc..
 
 This generally means that something went wrong with detecting the latest versions of the mod and they are out of sync.

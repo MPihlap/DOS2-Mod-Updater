@@ -43,6 +43,12 @@ EpipEncounters:
     metafiles:
         - '\DefEd\Data\Mods\EpipEncounters_7d32cb52-1cfd-4526-9b84-db4867bf9356\meta.lsx'
 
+# Epip Gameplay
+EpipGameplay:
+    force_update: False
+    url: https://drive.google.com/file/d/1HqxEzlXaZa4AMRpCybDPvZ2IyFjAL0J0/view
+    filenames:
+        - "EpipGameplay_6fd5667e-fb05-43ad-b3a9-764b63b21497.pak"
 
 # Derpy's EE2 tweaks + Artifact tiers
 Derpy:
@@ -51,7 +57,6 @@ Derpy:
     filenames:
         - "Derpy's EE2 tweaks.pak"
         - "Derpy's Artifact Tiers.pak"
-
 
 # Runepatch
 RunePatch:

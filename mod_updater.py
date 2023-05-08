@@ -236,7 +236,7 @@ class EpipUpdater(Updater):
 
         latest_epip_version = int(self.cloud_version_dict["Version"])
         logging.debug(f"latest_epip_version {latest_epip_version}")
-        current_epip = [file for file in listdir() if file.startswith("Epip")]
+        current_epip = [file for file in listdir() if file.startswith("EpipEncounters")]
         self.current_epip = current_epip
         if len(current_epip) == 0:
             logging.info("No existing Epip Encounters installation found, downloading latest ...")

@@ -13,7 +13,7 @@ By default, the mod updater is configured to download the latest versions of the
 
 1. Right click the game and open properties
 2. Go to the general tab
-3. Add the following to the launch options: `"FULL PATH TO GAME.EXE" %command%`
+3. Add the following to the launch options: `"FULL PATH TO mod_updater.exe" %command%`
     * Full example: `"C:\Program Files (x86)\Steam\steamapps\common\Divinity Original Sin 2\DefEd\bin\mod_updater.exe" %command%`
 
 Now when you launch the game from Steam, it will update your mods and then launch the game.

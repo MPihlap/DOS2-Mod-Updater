@@ -285,7 +285,7 @@ class ScriptExtenderUpdater(FileExistUpdater):
     def download(self) -> bool:
         grab = requests.get(self.url)
         soup = BeautifulSoup(grab.text, "html.parser")
-        link = soup.find("a", href=True, text="from here").get("href")
+        link = soup.find("a", href=True, string="from here").get("href")
         download_success = download_file(link, zip=True)
         if download_success:
             json_object = json.dumps(self.config, indent=4)

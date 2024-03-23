@@ -16,6 +16,7 @@ import time
 import datetime
 import json
 import errno
+import sys
 
 
 def move_contents_here(folder):
@@ -319,7 +320,7 @@ def set_loglevel(loglevel):
         error = ValueError(f"Incorrect debug level specified in yaml: {loglevel}. Please choose either DEBUG or INFO")
         logging.exception(error)
         input("Press ENTER to exit")
-        exit(1)
+        sys.exit(1)
 
 
 def print_title():
@@ -359,7 +360,7 @@ def main():
         logging.exception(e)
         logging.error("Please make sure the mod_updater_config.yaml file is in the same folder as the mod_updater.exe")
         input("Press ENTER to exit")
-        exit(1)
+        sys.exit(1)
 
     global_settings = params["Global"]
     force_update_all = global_settings["force_update_all"]
@@ -382,7 +383,7 @@ def main():
                 logging.exception(e)
                 logging.error(f"Unable to locate mod folder! Make sure it is configured correctly in the mod_updater_config.yaml file.")
                 input("Press ENTER to exit")
-                exit(1)
+                sys.exit(1)
 
     autorun = global_settings["autorun"]
 
@@ -440,7 +441,7 @@ def main():
     except Exception as e:
         logging.exception(e)
         input("Press ENTER to exit")
-        exit(1)
+        sys.exit(1)
 
     chdir(start_dir)
     with open("local_versions.json", "w") as file:
@@ -453,7 +454,7 @@ def main():
         else:
             logging.error(f"Tried to run the game, but the path '{executable}' is not correct. Edit the mod_updater_config.yaml file to setup autorun.")
             input("Press ENTER to exit")
-            exit(1)
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

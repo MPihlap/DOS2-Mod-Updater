@@ -6,7 +6,7 @@ Global:
     executable: 'EoCApp.exe'
     autorun: True           # If true, the game will be launched after updating
     mod_folder: "%UserProfile%/Documents/Larian Studios/Divinity Original Sin 2 Definitive Edition/Mods"
-    versions_url: "https://www.pinewood.team/EE/versions.json"
+    versions_url: https://raw.githubusercontent.com/PinewoodPip/DOS2-Mod-Versions/main/versions.json
 
 ## Mod list ##
 # To add a mod, make a new entry with a similar structure as the following ones.
@@ -16,6 +16,7 @@ Global:
 #   Use the force_update parameter or delete the files when you want to force an update.
 
 # Norbyte script extender
+# NB! If epip updating is allowed, the config file will be overwritten when epip updates.
 ScriptExtender:
     force_update: False
     url: "https://github.com/Norbyte/ositools/releases"
@@ -42,6 +43,7 @@ EpipEncounters:
     url: https://www.pinewood.team/epip/patchnotes/
     metafiles:
         - '\DefEd\Data\Mods\EpipEncounters_7d32cb52-1cfd-4526-9b84-db4867bf9356\meta.lsx'
+    extender_config: 'https://www.pinewood.team/epip/ScriptExtenderUpdaterConfig.json'
 
 # Epip Gameplay
 EpipGameplay:

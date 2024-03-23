@@ -423,6 +423,10 @@ def main():
                 continue
             elif mod == "EpipEncounters":
                 updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict)
+                if updater.needs_update(): # If an update is coming, overwrite the scriptextender configuration as well.
+                    chdir(start_dir)
+                    NoBrainUpdater(mod_params["extender_config"]).update()
+                    chdir(mod_folder)
             elif mod == "EpicEncounters":
                 updater = EpicEncountersUpdater(url, force_update=force_update, filenames=filenames, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict, metafiles=metafiles)
             elif mod == "Derpy":

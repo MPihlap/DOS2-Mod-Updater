@@ -17,14 +17,22 @@ Global:
 
 # Norbyte script extender
 # NB! If epip updating is allowed, the config file will be overwritten when epip updates.
-ScriptExtender:
+# ScriptExtender:
+#     force_update: False
+#     url: "https://github.com/Norbyte/ositools/releases"
+#     filenames:
+#         - "ScriptExtenderUpdaterConfig.json"
+#     config:
+#         "UpdateChannel": "Release" # or "Devel" for experimental releases.
+#         "Debug": false
+
+# Epip script extender
+EpipScriptExtender:
     force_update: False
-    url: "https://github.com/Norbyte/ositools/releases"
+    url: "https://drive.google.com/drive/folders/1I2ZXjbDkZW-WCdC_-EBNQvimHVHssL7m"
     filenames:
-        - "ScriptExtenderUpdaterConfig.json"
-    config:
-        "UpdateChannel": "Release" # or "Devel" for experimental releases.
-        "Debug": false
+        - "DXGI.dll"
+        - "libprotobuf-lite.dll"
 
 # Epic Encounters
 EpicEncounters:
@@ -63,6 +71,6 @@ Derpy:
 # Runepatch
 RunePatch:
     force_update: False
-    url: https://cdn.discordapp.com/attachments/608788140550914069/775764883500171304/runepatch.pak
+    url: https://drive.google.com/file/d/1pTYjZLCSZBvqbdYczc5E6V5VBh-Wk7Mp/view?usp=sharing
     filenames:
         - "runepatch.pak"

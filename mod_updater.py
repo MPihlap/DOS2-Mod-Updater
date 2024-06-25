@@ -19,6 +19,22 @@ import errno
 import sys
 
 
+def get_latest_commit_date(owner, repo, token=""):
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits"
+    headers = {'Authorization': f'token {token}'}
+    response = requests.get(url, headers=headers)
+    commits = response.json()
+    
+    if response.status_code == 200 and len(commits) > 0:
+        latest_commit = commits[0]
+        latest_commit_date_str = latest_commit['commit']['committer']['date']
+        latest_commit_date = datetime.datetime.fromisoformat(latest_commit_date_str.replace('Z', '+00:00'))
+        return latest_commit_date
+    else:
+        logging.debug(vars(response))
+        return None
+
+
 def move_contents_here(folder):
     """
     Move files from target folder to current path.
@@ -278,6 +294,47 @@ class EpipUpdater(Updater):
                 self.local_version_dict["Date"] = self.cloud_version_dict["Date"]
 
 
+class EpipNightlyUpdater(FileExistUpdater):
+
+
+    def __init__(self, url, local_versions_dict, force_update=False, metafiles=[], filenames = []) -> None:
+        self.url = url
+        self.local_versions_dict = local_versions_dict
+        self.current_epip = [file for file in listdir() if file.startswith("EpipEncounters")]
+        super().__init__(url=url, force_update=force_update, filenames=filenames, metafiles=metafiles)
+    
+    def needs_update(self) -> bool:
+        self.latest_commit_datetime = get_latest_commit_date("PinewoodPip", "EpipEncounters")
+        if self.local_versions_dict.get("EpipNightly") is None: # Check if the local version dict has the mod.
+            return True
+        if super().needs_update(): # Check if the files exist.
+            return True
+        for metafile in self.metafiles:
+            if exists(metafile): # If metafile exists, never update
+                logging.warn(f"Found metafile at {metafile}, not updating")
+                return False
+        self.local_version_datetime = datetime.datetime.fromisoformat(self.local_versions_dict["EpipNightly"]["Date"].replace('Z', '+00:00'))
+        return self.latest_commit_datetime > self.local_version_datetime
+
+    def update(self):
+        if self.needs_update():
+            download_success = self.download()
+            if download_success:
+                if self.local_versions_dict.get("EpipNightly") is None:
+                    self.local_versions_dict["EpipNightly"] = {}
+                self.local_versions_dict["EpipNightly"]["Date"] = self.latest_commit_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+                # Check for regular installation of Epip. If any are found, delete them.
+                pattern = r"EpipEncounters_v\d+\.pak"
+                regex = re.compile(pattern)
+                for file in self.current_epip:
+                    if regex.match(file):
+                        os.remove(file)
+                self.local_versions_dict.pop("EpipEncounters")
+    
+    def download(self) -> bool:
+        return download_file(self.url, zip=True)
+
+
 class ScriptExtenderUpdater(FileExistUpdater):
     def __init__(self, url, force_update=False, filenames=[], metafiles=[], config=None) -> None:
         super().__init__(url, force_update, filenames, metafiles)
@@ -428,7 +485,18 @@ def main():
                 chdir(mod_folder)
                 continue
             elif mod == "EpipEncounters":
-                updater = EpipUpdater(url, force_update=force_update, metafiles=metafiles, cloud_version_dict=cloud_version_dict, local_version_dict=local_version_dict)
+                if mod_params.get("nightly"):
+                    updater = EpipNightlyUpdater(mod_params.get("nightly_url"), 
+                                                 local_versions_dict=local_versions["Mods"], 
+                                                 force_update=force_update, 
+                                                 filenames=mod_params.get("nightly_filenames"), 
+                                                 metafiles=metafiles)
+                else:
+                    updater = EpipUpdater(url, 
+                                          force_update=force_update, 
+                                          metafiles=metafiles, 
+                                          cloud_version_dict=cloud_version_dict, 
+                                          local_version_dict=local_version_dict)
                 if updater.needs_update(): # If an update is coming, overwrite the scriptextender configuration as well.
                     chdir(start_dir)
                     NoBrainUpdater(mod_params["extender_config"]).update()

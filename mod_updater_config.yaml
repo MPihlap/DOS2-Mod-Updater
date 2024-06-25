@@ -48,10 +48,14 @@ EpicEncounters:
 # Epip Encounters
 EpipEncounters:
     force_update: False
+    nightly: True # Use experimental, most recent version of epip (https://www.pinewood.team/epip/nightly/)
     url: https://www.pinewood.team/epip/patchnotes/
     metafiles:
         - '\DefEd\Data\Mods\EpipEncounters_7d32cb52-1cfd-4526-9b84-db4867bf9356\meta.lsx'
     extender_config: 'https://www.pinewood.team/epip/ScriptExtenderUpdaterConfig.json'
+    nightly_url: 'https://drive.google.com/drive/folders/18yDypypxUYvmk6eOpYEEEwvMQlfxj96K'
+    nightly_filenames:
+        - "EpipEncounters_Test.pak"
 
 # Epip Gameplay
 EpipGameplay:

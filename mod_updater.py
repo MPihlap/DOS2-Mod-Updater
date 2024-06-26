@@ -19,11 +19,15 @@ import errno
 import sys
 
 
-def get_latest_commit_date(owner, repo, token=""):
+def get_latest_commit_date(owner, repo, token=None):
     url = f"https://api.github.com/repos/{owner}/{repo}/commits"
-    headers = {'Authorization': f'token {token}'}
-    response = requests.get(url, headers=headers)
+    if token is not None and token != "":
+        headers = {'Authorization': f'token {token}'}
+        response = requests.get(url, headers=headers)
+    else:
+        response = requests.get(url)
     commits = response.json()
+    logging.debug(commits)
     
     if response.status_code == 200 and len(commits) > 0:
         latest_commit = commits[0]
@@ -31,7 +35,7 @@ def get_latest_commit_date(owner, repo, token=""):
         latest_commit_date = datetime.datetime.fromisoformat(latest_commit_date_str.replace('Z', '+00:00'))
         return latest_commit_date
     else:
-        logging.debug(vars(response))
+        logging.warning(commits["message"])
         return None
 
 
@@ -232,15 +236,16 @@ class EpicEncountersUpdater(FileTimestampUpdater):
 class EpipUpdater(Updater):
 
 
-    def __init__(self, url, force_update=False, metafiles=[], cloud_version_dict=None, local_version_dict=None) -> None:
+    def __init__(self, url, force_update=False, metafiles=[], cloud_version_dict=None, mod_dict=None) -> None:
         super().__init__(force_update=force_update)
         self.url = url
         grab = requests.get(self.url)
         self.soup = BeautifulSoup(grab.text, 'html.parser')
         self.metafiles = metafiles
         self.current_epip = []
+        self.mod_dict = mod_dict
         self.cloud_version_dict = cloud_version_dict
-        self.local_version_dict = local_version_dict
+        self.local_version_dict = mod_dict["EpipEncounters"]
 
     def needs_update(self):
         if self.force_update:
@@ -289,7 +294,11 @@ class EpipUpdater(Updater):
         if self.needs_update():
             download_success = self.download()
             if download_success:
+                # Delete old epip pak files (including nightly)
                 self.delete_old()
+                # Remove nightly version of epip from local_versions if needed
+                self.mod_dict.pop("EpipNightly", None) 
+                # Update local version and date
                 self.local_version_dict["Version"] = self.cloud_version_dict["Version"]
                 self.local_version_dict["Date"] = self.cloud_version_dict["Date"]
 
@@ -297,14 +306,17 @@ class EpipUpdater(Updater):
 class EpipNightlyUpdater(FileExistUpdater):
 
 
-    def __init__(self, url, local_versions_dict, force_update=False, metafiles=[], filenames = []) -> None:
+    def __init__(self, url, local_versions_dict, force_update=False, metafiles=[], filenames=[], token=None) -> None:
         self.url = url
         self.local_versions_dict = local_versions_dict
         self.current_epip = [file for file in listdir() if file.startswith("EpipEncounters")]
+        self.token = token
         super().__init__(url=url, force_update=force_update, filenames=filenames, metafiles=metafiles)
     
     def needs_update(self) -> bool:
-        self.latest_commit_datetime = get_latest_commit_date("PinewoodPip", "EpipEncounters")
+        self.latest_commit_datetime = get_latest_commit_date("PinewoodPip", "EpipEncounters", token=self.token)
+        if self.latest_commit_datetime is None:
+            self.latest_commit_datetime = datetime.datetime.now(datetime.timezone.utc)
         if self.local_versions_dict.get("EpipNightly") is None: # Check if the local version dict has the mod.
             return True
         if super().needs_update(): # Check if the files exist.
@@ -320,6 +332,10 @@ class EpipNightlyUpdater(FileExistUpdater):
         if self.needs_update():
             download_success = self.download()
             if download_success:
+                try:
+                    os.remove("gitlog.txt")
+                except OSError:
+                    logging.debug("No gitlog file found.")
                 if self.local_versions_dict.get("EpipNightly") is None:
                     self.local_versions_dict["EpipNightly"] = {}
                 self.local_versions_dict["EpipNightly"]["Date"] = self.latest_commit_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -490,13 +506,15 @@ def main():
                                                  local_versions_dict=local_versions["Mods"], 
                                                  force_update=force_update, 
                                                  filenames=mod_params.get("nightly_filenames"), 
-                                                 metafiles=metafiles)
+                                                 metafiles=metafiles,
+                                                 token=mod_params.get("github_token"))
                 else:
                     updater = EpipUpdater(url, 
                                           force_update=force_update, 
                                           metafiles=metafiles, 
                                           cloud_version_dict=cloud_version_dict, 
-                                          local_version_dict=local_version_dict)
+                                          mod_dict=local_versions["Mods"])
+                    
                 if updater.needs_update(): # If an update is coming, overwrite the scriptextender configuration as well.
                     chdir(start_dir)
                     NoBrainUpdater(mod_params["extender_config"]).update()

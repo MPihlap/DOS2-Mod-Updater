@@ -12,7 +12,6 @@ Global:
 # To add a mod, make a new entry with a similar structure as the following ones.
 # Basic mods uploaded to a reasonable site should work out of the box
 # Some mods have special handlers, Epip for instance only updates when the version in your mod folder is older than the most recent release.
-# If filenames are specified for a mod, then that mod is not downloaded if the files are already there.
 #   Use the force_update parameter or delete the files when you want to force an update.
 
 # Norbyte script extender
@@ -48,7 +47,7 @@ EpicEncounters:
 # Epip Encounters
 EpipEncounters:
     force_update: False
-    nightly: True # Use experimental, most recent version of epip (https://www.pinewood.team/epip/nightly/)
+    nightly: False # Use experimental, most recent version of epip (https://www.pinewood.team/epip/nightly/)
     url: https://www.pinewood.team/epip/patchnotes/
     metafiles:
         - '\DefEd\Data\Mods\EpipEncounters_7d32cb52-1cfd-4526-9b84-db4867bf9356\meta.lsx'
@@ -56,6 +55,9 @@ EpipEncounters:
     nightly_url: 'https://drive.google.com/drive/folders/18yDypypxUYvmk6eOpYEEEwvMQlfxj96K'
     nightly_filenames:
         - "EpipEncounters_Test.pak"
+    # To avoid rate limits / constantly updating nightly, set up a github token and personal token as per 
+    #   https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+    github_token: ""
 
 # Epip Gameplay
 EpipGameplay:

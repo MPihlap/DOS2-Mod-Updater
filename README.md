@@ -46,6 +46,16 @@ The updater does its best to auto-detect your DOSII mods folder.
 On some occasions, its best is not enough.
 If this happens, edit the `mod_updater_config.yaml` file and replace the `mod_folder` parameter with your actual mod folder.
 
+### Optional features
+
+#### Epip nightly
+
+Starting from 1.9.0, the updater supports automatically updating the nightly builds of Epip (https://www.pinewood.team/epip/nightly/).
+To do so, edit the `mod_updater_config.yaml` file and set the `nightly` parameter under `EpipEncounters` to `True`.
+If you notice the mod updating every time you launch the game, you are likely rate limited by the github API. 
+To circumvent this, you can setup a GitHub account and a personal access token as per https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic. 
+Add the token to the `github_token` variable in the mod updater and you will be set.
+
 
 ## How to develop / run natively
 0. Clone the repository
